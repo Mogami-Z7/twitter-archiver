@@ -1,0 +1,28 @@
+name: Capturar tweets nuevos
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # Cada 5 minutos, las 24 horas
+  workflow_dispatch:          # También permite correrlo manualmente
+
+jobs:
+  capturar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install feedparser requests
+
+      - name: Ejecutar captura
+        run: python capturar.py
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          RSS_URL:     ${{ secrets.RSS_URL }}
