@@ -8,7 +8,7 @@ ANON_KEY    = os.environ['SUPABASE_ANON_KEY']
 
 headers = {
     'Content-Type': 'application/json',
-    'apikey': ANON_KEY
+    'Authorization': f'Bearer {ANON_KEY}'
 }
 
 feed = feedparser.parse(RSS_URL)
