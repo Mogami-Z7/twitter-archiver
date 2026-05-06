@@ -4,6 +4,12 @@ import os
 
 WEBHOOK_URL = os.environ['WEBHOOK_URL']
 RSS_URL     = os.environ['RSS_URL']
+ANON_KEY    = os.environ['SUPABASE_ANON_KEY']
+
+headers = {
+    'Content-Type': 'application/json',
+    'apikey': ANON_KEY
+}
 
 feed = feedparser.parse(RSS_URL)
 
@@ -14,13 +20,13 @@ else:
         # Extraer el ID del tweet desde la URL
         tweet_id = entry.link.split('/')[-1].split('#')[0]
 
-        # Enviar al webhook (la Edge Function deduplica automáticamente)
+        # Enviar al webhook
         try:
             response = requests.post(WEBHOOK_URL, json={
                 'tweet_id':          tweet_id,
                 'origen':            'B',
                 'fecha_publicacion': entry.get('published', '')
-            }, timeout=30)
+            }, headers=headers, timeout=30)
 
             result = response.json()
 
