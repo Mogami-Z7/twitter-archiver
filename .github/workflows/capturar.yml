@@ -22,5 +22,5 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
           RSS_URL: ${{ secrets.RSS_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }} # <-- LÍNEA NUEVA
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }} # Esta es la clave
         run: python capturar.py
