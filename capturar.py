@@ -1,41 +1,36 @@
-import feedparser
-import requests
 import os
+import requests
+import feedparser
 
-WEBHOOK_URL = os.environ['WEBHOOK_URL']
-RSS_URL     = os.environ['RSS_URL']
-ANON_KEY    = os.environ['SUPABASE_ANON_KEY']
+# Recuperamos los secrets que configuraste en GitHub
+webhook_url = os.environ.get('WEBHOOK_URL')
+rss_url = os.environ.get('RSS_URL')
 
-headers = {
-    'Content-Type': 'application/json',
-    'Authorization': f'Bearer {ANON_KEY}'
-}
+def check_rss():
+    print(f"Consultando RSS...")
+    feed = feedparser.parse(rss_url)
+    
+    if not feed.entries:
+        print("El feed está vacío o falló la conexión a RSSHub.")
+        return
 
-feed = feedparser.parse(RSS_URL)
+    # Extraemos el ID del tuit más reciente desde el enlace
+    latest_entry = feed.entries[0]
+    tweet_id = latest_entry.link.split('/')[-1]
+    
+    print(f"Último Tweet ID detectado: {tweet_id}")
 
-if not feed.entries:
-    print("No se pudo leer el feed o está vacío.")
-else:
-    for entry in feed.entries:
-        # Extraer el ID del tweet desde la URL
-        tweet_id = entry.link.split('/')[-1].split('#')[0]
+    # Preparamos el paquete para la Edge Function
+    payload = {
+        "tweet_id": tweet_id,
+        "origen": "Via B (GitHub Actions)"
+    }
+    
+    # Disparamos el Webhook
+    response = requests.post(webhook_url, json=payload)
+    
+    print(f"Estado HTTP de Supabase: {response.status_code}")
+    print(f"Respuesta del servidor: {response.text}")
 
-        # Enviar al webhook
-        try:
-            response = requests.post(WEBHOOK_URL, json={
-                'tweet_id':          tweet_id,
-                'origen':            'B',
-                'fecha_publicacion': entry.get('published', '')
-            }, headers=headers, timeout=30)
-
-            result = response.json()
-
-            if result.get('status') == 'captured':
-                print(f"Nuevo tweet guardado: {tweet_id}")
-            elif result.get('status') == 'already_captured':
-                print(f"Ya existía, ignorado: {tweet_id}")
-            else:
-                print(f"Respuesta inesperada en {tweet_id}: {result}")
-
-        except Exception as e:
-            print(f"Error procesando {tweet_id}: {e}")
+if __name__ == "__main__":
+    check_rss()
